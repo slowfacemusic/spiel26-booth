@@ -1,0 +1,675 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Booth Demos SPIEL 26</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Archivo:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky dagflikar + teamrad, sedan en tidslinje med två bordkolumner. Mobil först. */
+:root {
+  --bg: #eef0ec; --surface: #ffffff; --ink: #1d2420; --muted: #5d6a62; --line: #d5dad3;
+  --accent: #2f5d46; --accent-ink: #ffffff;
+  --beast: #b4532a; --beast-bg: #f6e3d8; --pact: #4b4f9a; --pact-bg: #e3e3f5;
+  --ok: #2f7a4a; --warn: #a86a00; --bad: #b3261e; --now: #d43c2a;
+  --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --body: "Archivo", system-ui, -apple-system, sans-serif;
+  --cell: 96px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141917; --surface: #1e2522; --ink: #e6ebe7; --muted: #9aa69f; --line: #323b37;
+  --accent: #7fc19c; --accent-ink: #10201a;
+  --beast: #f0936a; --beast-bg: #3c2519; --pact: #a7abf2; --pact-bg: #262844;
+  --ok: #6fcf8f; --warn: #e3b04b; --bad: #f2867e; --now: #ff6b57; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141917; --surface: #1e2522; --ink: #e6ebe7; --muted: #9aa69f; --line: #323b37;
+  --accent: #7fc19c; --accent-ink: #10201a;
+  --beast: #f0936a; --beast-bg: #3c2519; --pact: #a7abf2; --pact-bg: #262844;
+  --ok: #6fcf8f; --warn: #e3b04b; --bad: #f2867e; --now: #ff6b57; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px 10px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: 28px; letter-spacing: .01em; margin: 0; text-transform: uppercase; line-height: 1; }
+h1 small { color: var(--muted); font-weight: 700; font-size: 16px; letter-spacing: .06em; margin-left: 6px; }
+.sync { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sync.off { color: var(--bad); }
+.days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.days button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 4px; cursor: pointer; display: grid; line-height: 1.15; }
+.days button b { font-family: var(--display); font-size: 18px; }
+.days button span { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.days button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.days button[aria-pressed="true"] span { color: inherit; opacity: .85; }
+
+.label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+section { margin-top: 16px; display: grid; gap: 8px; }
+.team { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 5px 11px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip.lunch { border-color: var(--warn); }
+.chip.lunch .t { color: var(--warn); font-weight: 600; }
+.chip.add { border-style: dashed; color: var(--muted); }
+.now { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.now div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; font-size: 13px; }
+.now strong { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.grid { display: grid; grid-template-columns: 46px 1fr 1fr; gap: 0 6px; margin-top: 4px; }
+.colhead { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--hh, 118px)); z-index: 3; background: var(--bg); font-family: var(--display); font-size: 18px; font-weight: 700; text-transform: uppercase; padding-block: 6px; }
+.times, .col { position: relative; }
+.times div { height: var(--cell); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 6px; box-sizing: border-box; }
+.times div b { display: block; color: var(--ink); font-size: 14px; }
+.col { border-left: 1px solid var(--line); }
+.slot { display: block; width: 100%; height: var(--cell); border: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer; text-align: left; color: var(--muted); font: inherit; font-size: 12px; padding: 0 8px; }
+.slot.hour { border-top-style: solid; }
+.slot:hover, .slot:focus-visible { background: var(--surface); color: var(--accent); }
+.slot:hover::after, .slot:focus-visible::after { content: "+ Book"; }
+.slot.past { cursor: default; opacity: .45; }
+.slot.past:hover { background: transparent; }
+.slot.past:hover::after { content: none; }
+.bk { position: absolute; left: 3px; right: 3px; border-radius: 8px; padding: 5px 8px; border: 0; border-left: 4px solid var(--beast); background: var(--beast-bg); color: var(--ink); font: inherit; text-align: left; cursor: pointer; overflow: hidden; display: grid; align-content: start; gap: 1px; z-index: 1; }
+.bk.pact { border-left-color: var(--pact); background: var(--pact-bg); }
+.bk b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk .st { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.bk.here .st { color: var(--ok); }
+.bk.done { opacity: .55; }
+.bk.noshow { opacity: .55; text-decoration: line-through; }
+.bk.noshow .st { color: var(--bad); }
+.bk.short b { font-size: 13px; }
+.bk:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nowline { position: absolute; left: 0; right: 0; height: 2px; background: var(--now); z-index: 2; pointer-events: none; }
+.nowline::before { content: ""; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--now); }
+.empty { color: var(--muted); font-size: 13px; }
+
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.views button { font: inherit; font-weight: 600; font-size: 14px; border: 0; background: var(--surface); color: var(--ink); padding: 8px; cursor: pointer; }
+.views button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.person { font: inherit; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; }
+.person b { font-size: 14px; }
+.person span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.person.off { opacity: .55; }
+.person .bad { color: var(--warn); font-weight: 600; }
+.passes { display: grid; gap: 10px; }
+.pass { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.pass.now { border-color: var(--now); box-shadow: 0 0 0 1px var(--now); }
+.pass.past { opacity: .6; }
+.ptime { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.ptime b { font-family: var(--display); font-size: 22px; }
+.ptime span { font-size: 12px; color: var(--muted); }
+.prow { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; }
+.prow > .label { margin: 0; }
+.prow select { padding: 6px 8px; font-size: 15px; }
+.prow .guest { grid-column: 2; font-size: 12px; color: var(--muted); margin-top: -4px; }
+.prow .team .chip { padding: 4px 10px; }
+.chip[aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: var(--surface); }
+.counter { font-size: 14px; }
+.counter.none { color: var(--bad); font-weight: 600; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.toolbar .btn { padding: 8px 12px; font-size: 14px; }
+.hint { font-size: 12px; color: var(--muted); }
+
+dialog { border: 0; border-radius: 14px; padding: 0; width: min(440px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); }
+dialog::backdrop { background: rgb(0 0 0 / .45); }
+form.sheet { display: grid; gap: 12px; padding: 18px; }
+form.sheet h2 { font-family: var(--display); font-size: 24px; text-transform: uppercase; margin: 0; }
+.sub { color: var(--muted); font-size: 13px; margin-top: -8px; }
+.field { display: grid; gap: 4px; }
+.field label, .field .label { font-size: 12px; font-weight: 600; color: var(--muted); }
+input, select, textarea { font: inherit; font-size: 16px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; box-sizing: border-box; }
+textarea { min-height: 56px; resize: vertical; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: 14px; flex: 1; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 8px 6px; cursor: pointer; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.warn { color: var(--warn); font-size: 13px; }
+.err { color: var(--bad); font-size: 13px; font-weight: 600; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 600; border-radius: 8px; padding: 10px 16px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--bad); margin-right: auto; }
+.btn.danger.armed { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+.toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 14px; z-index: 20; }
+@media (prefers-reduced-motion: no-preference) { .bk { transition: opacity .2s; } }
+</style>
+
+<div class="wrap">
+  <header id="hdr">
+    <div class="top">
+      <h1>Booth Demos<small>SPIEL 26</small></h1>
+      <span class="sync" id="sync">Connecting…</span>
+    </div>
+    <div class="days" id="days"></div>
+    <div class="views" id="views"><button type="button" data-v="demos">Demos</button><button type="button" data-v="schema">Schedule</button></div>
+  </header>
+
+  <div id="demoView">
+    <section>
+      <div class="label">In the booth today</div>
+      <div class="team" id="team"></div>
+    </section>
+
+    <section>
+      <div class="label" id="nowLabel">Up next</div>
+      <div class="now" id="now"></div>
+    </section>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="schedView" hidden>
+    <section>
+      <div class="label">Team today · tap to set who is here and when</div>
+      <div class="people" id="people"></div>
+    </section>
+    <section>
+      <div class="toolbar">
+        <div class="label" style="margin-right:auto">Demo passes · 60 min demo, 20 min break</div>
+        <button type="button" class="btn" id="autofill">Fill empty spots</button>
+      </div>
+      <div class="hint">Pick a host for each table and who takes lunch during that pass. Everyone else is at the counter.</div>
+      <div class="passes" id="passes"></div>
+    </section>
+  </div>
+</div>
+
+<dialog id="bookDlg">
+  <form class="sheet" id="bookForm">
+    <h2 id="bTitle">New demo</h2>
+    <div class="sub" id="bSub"></div>
+    <div class="field"><span class="label">Game</span><div class="seg" id="bGame"></div></div>
+    <div class="row2">
+      <div class="field"><label for="bStart">Start</label><input type="time" id="bStart" step="300" required></div>
+      <div class="field"><label for="bEnd">End</label><input type="time" id="bEnd" step="300" required></div>
+    </div>
+    <div class="field"><label for="bName">Name</label><input id="bName" autocomplete="off" required placeholder="Guest name"></div>
+    <div class="row2">
+      <div class="field"><label for="bTable">Table</label><select id="bTable"><option value="1">Table 1</option><option value="2">Table 2</option></select></div>
+      <div class="field"><label for="bPlayers">Players</label><select id="bPlayers"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
+    </div>
+    <div class="field"><label for="bHost">Demo host</label><select id="bHost"></select></div>
+    <div class="field"><label for="bNote">Note</label><textarea id="bNote" placeholder="Language, contact, backer…"></textarea></div>
+    <div class="field" id="bStatusWrap"><span class="label">Status</span><div class="seg" id="bStatus"></div></div>
+    <div class="warn" id="bWarn" hidden></div>
+    <div class="err" id="bErr" hidden></div>
+    <div class="actions">
+      <button type="button" class="btn danger" id="bDel" hidden>Delete</button>
+      <button type="button" class="btn" id="bCancel">Close</button>
+      <button type="submit" class="btn primary" id="bSave">Book</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="lunchDlg">
+  <form class="sheet" id="lunchForm">
+    <h2 id="lTitle">Person</h2>
+    <div class="sub" id="lSub"></div>
+    <div class="field"><span class="label">In the booth</span><div class="seg" id="lHere"></div></div>
+    <div class="row2" id="lShiftRow">
+      <div class="field"><label for="lFrom">From</label><select id="lFrom"></select></div>
+      <div class="field"><label for="lTo">To</label><select id="lTo"></select></div>
+    </div>
+    <div class="warn" id="lWarn" hidden></div>
+    <div class="err" id="lErr" hidden></div>
+    <div class="actions">
+      <button type="button" class="btn danger" id="lRemove">Remove person</button>
+      <button type="button" class="btn" id="lCancel">Close</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="addDlg">
+  <form class="sheet" id="addForm">
+    <h2>Add to team</h2>
+    <div class="field"><label for="aName">Name</label><input id="aName" autocomplete="off" required></div>
+    <div class="actions">
+      <button type="button" class="btn" id="aCancel">Close</button>
+      <button type="submit" class="btn primary">Add</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const DAYS = [
+  { id: "2026-10-22", short: "Thu", label: "Oct 22", close: 19 * 60 },
+  { id: "2026-10-23", short: "Fri", label: "Oct 23", close: 19 * 60 },
+  { id: "2026-10-24", short: "Sat", label: "Oct 24", close: 19 * 60 },
+  { id: "2026-10-25", short: "Sun", label: "Oct 25", close: 18 * 60 },
+];
+// Fasta pass: 60 min demo + 20 min paus, första 10:20.
+const FIRST = 10 * 60 + 20, DEMO = 60, STEP = 80;
+const GAMES = { "Beast": "beast", "Hollow Pact": "pact" };
+const STATUS = { booked: "Booked", here: "Arrived", done: "Done", noshow: "No-show" };
+
+const $ = id => document.getElementById(id);
+const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+const fmt = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+const overlap = (a0, a1, b0, b1) => a0 < b1 && b0 < a1;
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const todayId = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const slotsFor = day => { const out = []; for (let m = FIRST; m + DEMO <= day.close; m += STEP) out.push(m); return out; };
+
+const OPEN = 10 * 60;
+let bookings = [], team = { names: [], shifts: {}, roster: {} };
+let day = DAYS.find(d => d.id === todayId()) || DAYS[0];
+let view = location.hash === "#schema" ? "schema" : "demos";
+try { const saved = localStorage.getItem("demo-day"); if (saved && !DAYS.some(d => d.id === todayId())) day = DAYS.find(d => d.id === saved) || day; } catch (e) {}
+try { if (!location.hash) view = localStorage.getItem("demo-view") || view; } catch (e) {}
+
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
+function shiftOf(dayId, name) { return team.shifts?.[dayId]?.[name] || null; }
+// Schemat byggs per demopass: roster[dag][passstart] = { t1, t2, lunch: [namn] }.
+function passOf(dayId, slot) { return team.roster?.[dayId]?.[slot] || {}; }
+function hostOf(dayId, slot, table) {
+  const m = toMin(slot), k = Object.keys(team.roster?.[dayId] || {}).find(k => m >= toMin(k) && m < toMin(k) + STEP) || slot;
+  return passOf(dayId, k)["t" + table] || "";
+}
+function effHost(b) { return b.host || hostOf(b.day, b.start, b.table); }
+// Lunch tas under ett pass där man inte leder demo; hela passet + pausen räknas som lunchfönster.
+function lunchOf(dayId, name) {
+  const r = team.roster?.[dayId] || {};
+  const slot = Object.keys(r).find(k => (r[k].lunch || []).includes(name));
+  return slot ? { start: slot, dur: STEP } : null;
+}
+function covers(dayId, name, m) { const s = shiftOf(dayId, name); return !!s && m >= toMin(s.start) && m + DEMO <= toMin(s.end); }
+// I montern vid minut m = har pass som täcker m och äter inte just då.
+function present(dayId, name, m) {
+  const s = shiftOf(dayId, name); if (!s || m < toMin(s.start) || m >= toMin(s.end)) return false;
+  const l = lunchOf(dayId, name); return !(l && m >= toMin(l.start) && m < toMin(l.start) + l.dur);
+}
+function dayBookings(dayId) { return bookings.filter(b => b.day === dayId); }
+
+function renderDays() {
+  $("days").replaceChildren(...DAYS.map(d => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-pressed", d === day);
+    const n = dayBookings(d.id).filter(x => x.status !== "noshow").length;
+    b.innerHTML = `<b>${d.short}</b><span>${d.label} · ${n}</span>`;
+    b.onclick = () => { day = d; try { localStorage.setItem("demo-day", d.id); } catch (e) {} render(); };
+    return b;
+  }));
+}
+
+function addChip() {
+  const add = document.createElement("button");
+  add.type = "button"; add.className = "chip add"; add.textContent = team.names.length ? "+ Person" : "+ Add the team";
+  add.onclick = () => { $("aName").value = ""; $("addDlg").showModal(); };
+  return add;
+}
+
+function renderTeam() {
+  const isToday = day.id === todayId(), nm = nowMin();
+  const onDay = team.names.filter(n => shiftOf(day.id, n));
+  const chips = (onDay.length ? onDay : team.names).map(name => {
+    const l = lunchOf(day.id, name), s = shiftOf(day.id, name);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    const onLunch = l && isToday && overlap(nm, nm + 1, toMin(l.start), toMin(l.start) + l.dur);
+    if (onLunch) b.classList.add("lunch");
+    const t = document.createElement("span"); t.className = "t";
+    t.textContent = !s ? "no shift" : onLunch ? "at lunch" : `${s.start}–${s.end}` + (l ? ` · lunch ${l.start}` : " · no lunch");
+    const n = document.createElement("span"); n.textContent = name;
+    b.append(n, t);
+    b.onclick = () => openPerson(name);
+    return b;
+  });
+  $("team").replaceChildren(...chips, addChip());
+}
+
+function renderSched() {
+  const isToday = day.id === todayId(), nm = nowMin(), slots = slotsFor(day);
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  $("people").replaceChildren(...team.names.map(name => {
+    const s = shiftOf(day.id, name), l = lunchOf(day.id, name);
+    const n = slots.filter(m => [1, 2].some(t => hostOf(day.id, fmt(m), t) === name)).length;
+    const b = mk("button", "person" + (s ? "" : " off")); b.type = "button";
+    b.append(mk("b", "", name), mk("span", "", s ? `${s.start}–${s.end}` : "Not here today"));
+    if (s) { const x = mk("span"); x.append(`${n} demo${n === 1 ? "" : "s"} · `, l ? `lunch ${l.start}` : mk("span", "bad", "no lunch")); b.append(x); }
+    b.onclick = () => openPerson(name);
+    return b;
+  }), addChip());
+
+  $("passes").replaceChildren(...slots.map(m => {
+    const slot = fmt(m), p = passOf(day.id, slot), lunch = p.lunch || [];
+    const avail = team.names.filter(n => covers(day.id, n, m));
+    const card = mk("div", "pass");
+    if (isToday && nm >= m && nm < m + STEP) card.classList.add("now");
+    else if (isToday && nm >= m + STEP) card.classList.add("past");
+    const head = mk("div", "ptime"); head.append(mk("b", "", slot), `–${fmt(m + DEMO)}`, mk("span", "", m + STEP <= day.close ? `break until ${fmt(m + STEP)}` : "last demo"));
+    card.append(head);
+
+    [1, 2].forEach(t => {
+      const row = mk("div", "prow"); row.append(mk("span", "label", "Table " + t));
+      const sel = document.createElement("select"); sel.id = `host-${day.id}-${slot}-${t}`;
+      sel.setAttribute("aria-label", `Host table ${t} at ${slot}`);
+      const cur = p["t" + t] || "";
+      sel.append(new Option("— nobody —", ""), ...avail.map(n => new Option(n, n)));
+      if (cur && !avail.includes(cur)) sel.append(new Option(cur + " (not here)", cur));
+      sel.value = cur;
+      sel.onchange = () => setPass(slot, { ["t" + t]: sel.value });
+      row.append(sel);
+      const g = dayBookings(day.id).find(b => b.table === t && overlap(m, m + DEMO, toMin(b.start), toMin(b.start) + b.dur) && b.status !== "noshow");
+      row.append(mk("div", "guest", g ? `Booked: ${g.name} · ${g.game} · ${g.players} pl` : "No guest booked"));
+      card.append(row);
+    });
+
+    const lr = mk("div", "prow"); lr.append(mk("span", "label", "Lunch"));
+    const chips = mk("div", "team");
+    avail.forEach(n => {
+      const c = mk("button", "chip", n); c.type = "button";
+      c.setAttribute("aria-pressed", lunch.includes(n));
+      c.onclick = () => setPass(slot, { lunch: lunch.includes(n) ? lunch.filter(x => x !== n) : [...lunch, n] });
+      chips.append(c);
+    });
+    lr.append(chips); card.append(lr);
+
+    const counter = avail.filter(n => n !== p.t1 && n !== p.t2 && !lunch.includes(n));
+    const cr = mk("div", "prow"); cr.append(mk("span", "label", "Counter"), mk("span", "counter" + (counter.length ? "" : " none"), counter.length ? counter.join(", ") : "Nobody at the counter"));
+    card.append(cr);
+
+    const warns = [];
+    if (p.t1 && p.t1 === p.t2) warns.push(`${p.t1} is on both tables.`);
+    [p.t1, p.t2].filter(Boolean).forEach(h => { if (lunch.includes(h)) warns.push(`${h} is hosting and at lunch.`); });
+    if (warns.length) card.append(mk("div", "warn", [...new Set(warns)].join(" ")));
+    return card;
+  }));
+}
+
+async function setPass(slot, patch) {
+  const t = teamCopy();
+  t.roster[day.id] ||= {};
+  t.roster[day.id][slot] = { ...(t.roster[day.id][slot] || {}), ...patch };
+  try { await writeTeam(t); } catch (err) {}
+}
+
+// Fyller bara tomma platser: först en lunch per person (11:40–15:40, jämnt fördelat), sedan värdar med minst antal pass, helst inte två pass i rad.
+function autofill() {
+  const t = teamCopy(), r = t.roster[day.id] ||= {}, slots = slotsFor(day).map(fmt);
+  const count = Object.fromEntries(team.names.map(n => [n, 0]));
+  slots.forEach(s => [1, 2].forEach(k => { const h = r[s]?.["t" + k]; if (h) count[h] = (count[h] || 0) + 1; }));
+  const eaten = new Set(slots.flatMap(s => r[s]?.lunch || []));
+  team.names.filter(n => shiftOf(day.id, n) && !eaten.has(n)).forEach(n => {
+    const cands = slots.slice(1, 5).filter(s => covers(day.id, n, toMin(s)) && r[s]?.t1 !== n && r[s]?.t2 !== n);
+    if (!cands.length) return;
+    cands.sort((a, b) => (r[a]?.lunch?.length || 0) - (r[b]?.lunch?.length || 0));
+    r[cands[0]] = { ...(r[cands[0]] || {}), lunch: [...(r[cands[0]]?.lunch || []), n] };
+  });
+  let prev = [];
+  slots.forEach(s => {
+    const p = r[s] = { ...(r[s] || {}) };
+    [1, 2].forEach(k => {
+      if (p["t" + k]) return;
+      const cands = team.names.filter(n => covers(day.id, n, toMin(s)) && !(p.lunch || []).includes(n) && p.t1 !== n && p.t2 !== n);
+      cands.sort((a, b) => (count[a] - count[b]) || (prev.includes(a) - prev.includes(b)));
+      if (cands[0]) { p["t" + k] = cands[0]; count[cands[0]]++; }
+    });
+    prev = [p.t1, p.t2];
+  });
+  writeTeam(t).then(() => toast("Filled empty spots"), () => {});
+}
+$("autofill").onclick = autofill;
+function renderNow() {
+  const isToday = day.id === todayId(), nm = isToday ? nowMin() : 0;
+  $("nowLabel").textContent = isToday ? "Now and next" : "First demo " + day.short;
+  $("now").replaceChildren(...[1, 2].map(t => {
+    const list = dayBookings(day.id).filter(b => b.table === t && b.status !== "noshow" && b.status !== "done" && toMin(b.start) + b.dur > nm)
+      .sort((a, b) => toMin(a.start) - toMin(b.start));
+    const el = document.createElement("div");
+    const lab = document.createElement("div"); lab.className = "label"; lab.textContent = "Table " + t;
+    const s = document.createElement("strong");
+    const sub = document.createElement("div");
+    if (list[0]) {
+      const b = list[0];
+      s.textContent = `${b.start} ${b.name}`;
+      sub.textContent = `${b.game} · ${b.players} pl · ${effHost(b) || "no host"}`;
+    } else { s.textContent = "Free"; sub.textContent = "Nothing more booked"; }
+    el.append(lab, s, sub);
+    return el;
+  }));
+}
+
+function renderGrid() {
+  const slots = slotsFor(day), isToday = day.id === todayId(), nm = nowMin();
+  const g = $("grid"); g.replaceChildren();
+  const h0 = document.createElement("div"); h0.className = "colhead";
+  g.append(h0, ...[1, 2].map(t => { const h = document.createElement("div"); h.className = "colhead"; h.textContent = "Table " + t; return h; }));
+  const times = document.createElement("div"); times.className = "times";
+  slots.forEach(m => { const d = document.createElement("div"); d.innerHTML = `<b>${fmt(m)}</b>–${fmt(m + DEMO)}`; times.append(d); });
+  g.append(times);
+  const cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cell")) || 96;
+  [1, 2].forEach(t => {
+    const col = document.createElement("div"); col.className = "col";
+    slots.forEach(m => {
+      const s = document.createElement("button");
+      s.type = "button"; s.className = "slot";
+      s.textContent = hostOf(day.id, fmt(m), t) ? "Host: " + hostOf(day.id, fmt(m), t) + " " : "";
+      s.setAttribute("aria-label", `Book table ${t} ${fmt(m)}`);
+      if (isToday && m + DEMO <= nm) s.classList.add("past");
+      s.onclick = () => { if (!s.classList.contains("past")) openBooking(null, { table: t, start: fmt(m) }); };
+      col.append(s);
+    });
+    dayBookings(day.id).filter(b => b.table === t).forEach(b => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = `bk ${GAMES[b.game] || "beast"} ${b.status}`;
+      el.style.top = Math.max(0, (toMin(b.start) - FIRST) / STEP * cell + 2) + "px";
+      el.style.height = Math.max(24, (b.dur || DEMO) / STEP * cell - 5) + "px";
+      const nmEl = document.createElement("b"); nmEl.textContent = `${b.start} ${b.name}`;
+      const sub = document.createElement("span"); sub.textContent = `${b.game} · ${b.players} pl · ${effHost(b) || "no host"}`;
+      el.append(nmEl, sub);
+      if (b.note) { const n = document.createElement("span"); n.textContent = b.note; el.append(n); }
+      const st = document.createElement("span"); st.className = "st"; st.textContent = STATUS[b.status] || ""; el.append(st);
+      el.onclick = () => openBooking(b);
+      col.append(el);
+    });
+    if (isToday && nm >= FIRST && nm <= day.close) {
+      const line = document.createElement("div"); line.className = "nowline";
+      line.style.top = ((nm - FIRST) / STEP * cell) + "px"; col.append(line);
+    }
+    g.append(col);
+  });
+}
+
+function render() {
+  document.documentElement.style.setProperty("--hh", $("hdr").offsetHeight + "px");
+  [...$("views").children].forEach(b => b.setAttribute("aria-pressed", b.dataset.v === view));
+  $("demoView").hidden = view !== "demos"; $("schedView").hidden = view !== "schema";
+  renderDays();
+  if (view === "demos") { renderTeam(); renderNow(); renderGrid(); } else renderSched();
+}
+[...$("views").children].forEach(b => b.onclick = () => { view = b.dataset.v; try { localStorage.setItem("demo-view", view); } catch (e) {} render(); });
+
+/* ---------- Bokningsdialog ---------- */
+let editing = null, form = {};
+function seg(el, options, value, onPick, after = checkBooking) {
+  el.replaceChildren(...options.map(([v, label]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label; b.setAttribute("aria-pressed", v === value);
+    b.onclick = () => { onPick(v); seg(el, options, v, onPick, after); after(); };
+    return b;
+  }));
+}
+function openBooking(b, preset) {
+  editing = b;
+  form = b ? { ...b } : { game: "Beast", dur: DEMO, status: "booked", players: 2, host: "", name: "", note: "", ...preset };
+  $("bTitle").textContent = b ? b.name : "New demo";
+  $("bSub").textContent = `${day.short} ${day.label}`;
+  seg($("bGame"), Object.keys(GAMES).map(g => [g, g]), form.game, v => form.game = v);
+  fillStarts();
+  $("bTable").value = String(form.table);
+  $("bName").value = form.name; $("bPlayers").value = String(form.players); $("bNote").value = form.note || "";
+  const onDay = team.names.filter(n => shiftOf(day.id, n));
+  $("bHost").replaceChildren(new Option("Table host", ""), ...onDay.map(n => new Option(n, n)),
+    ...team.names.filter(n => !onDay.includes(n)).map(n => new Option(n + " (no shift)", n)));
+  if (form.host && !team.names.includes(form.host)) $("bHost").append(new Option(form.host, form.host));
+  $("bHost").value = form.host || "";
+  $("bStatusWrap").hidden = !b;
+  if (b) seg($("bStatus"), Object.entries(STATUS), form.status, v => form.status = v);
+  $("bDel").hidden = !b; $("bDel").classList.remove("armed"); $("bDel").textContent = "Delete";
+  $("bSave").textContent = b ? "Save" : "Book";
+  $("bErr").hidden = true;
+  checkBooking();
+  $("bookDlg").showModal();
+  if (!b) setTimeout(() => $("bName").focus(), 50);
+}
+function fillStarts() {
+  form.start ||= fmt(FIRST);
+  $("bStart").value = form.start; $("bEnd").value = fmt(toMin(form.start) + form.dur);
+}
+function readForm() {
+  form.start = $("bStart").value || form.start; form.dur = toMin($("bEnd").value || "00:00") - toMin(form.start); form.table = Number($("bTable").value);
+  form.name = $("bName").value.trim(); form.players = Number($("bPlayers").value);
+  form.host = $("bHost").value; form.note = $("bNote").value.trim();
+}
+// Returnerar {clash, warnings}. Krock på samma bord blockerar, resten är varningar.
+function conflicts(f) {
+  const s = toMin(f.start), e = s + f.dur, id = editing?.id;
+  if (f.dur <= 0) return { clash: { bad: true }, warnings: [] };
+  const others = dayBookings(day.id).filter(b => b.id !== id && b.status !== "noshow");
+  const clash = others.find(b => b.table === f.table && overlap(s, e, toMin(b.start), toMin(b.start) + b.dur));
+  const warnings = [];
+  const host = f.host || hostOf(day.id, f.start, f.table);
+  if (host) {
+    f = { ...f, host };
+    const dbl = others.find(b => effHost(b) === f.host && overlap(s, e, toMin(b.start), toMin(b.start) + b.dur));
+    if (dbl) warnings.push(`${f.host} is already hosting ${dbl.start} at table ${dbl.table}.`);
+    const l = lunchOf(day.id, f.host);
+    if (l && overlap(s, e, toMin(l.start), toMin(l.start) + l.dur)) warnings.push(`${f.host} has lunch ${l.start}–${fmt(toMin(l.start) + l.dur)}.`);
+    const sh = shiftOf(day.id, f.host);
+    if (!sh || s < toMin(sh.start) || e > toMin(sh.end)) warnings.push(`${f.host} is not in the booth for the whole demo` + (sh ? ` (shift ${sh.start}–${sh.end}).` : " (no shift today)."));
+  }
+  return { clash, warnings };
+}
+function checkBooking() {
+  readForm();
+  const th = hostOf(day.id, form.start, form.table);
+  $("bHost").options[0].text = th ? `Table host (${th})` : "Table host (nobody set)";
+  const { clash, warnings } = conflicts(form);
+  const w = $("bWarn");
+  const msgs = [...(clash?.bad ? ["End time must be after start time."] : clash ? [`Clash: ${clash.name} has table ${clash.table} ${clash.start}–${fmt(toMin(clash.start) + clash.dur)}.`] : []), ...warnings];
+  w.textContent = msgs.join(" "); w.hidden = !msgs.length;
+  $("bSave").disabled = !!clash;
+}
+["bStart", "bEnd", "bTable", "bHost"].forEach(id => $(id).addEventListener("change", checkBooking));
+$("bCancel").onclick = () => $("bookDlg").close();
+$("bookForm").addEventListener("submit", async e => {
+  e.preventDefault(); readForm();
+  if (!form.name) { $("bName").focus(); return; }
+  if (conflicts(form).clash) return;
+  const data = { day: day.id, table: form.table, start: form.start, dur: form.dur, game: form.game, name: form.name,
+    players: form.players, host: form.host, note: form.note, status: form.status || "booked",
+    updatedAt: new Date().toISOString() };
+  $("bSave").disabled = true;
+  try { await put("bookings/" + (editing ? editing.id : crypto.randomUUID()), data); $("bookDlg").close(); toast(editing ? "Saved" : `Booked ${form.start} at table ${form.table}`); }
+  catch (err) { showErr(err); }
+  finally { $("bSave").disabled = false; }
+});
+$("bDel").onclick = async () => {
+  const btn = $("bDel");
+  if (!btn.classList.contains("armed")) { btn.classList.add("armed"); btn.textContent = "Tap again to delete"; return; }
+  try { await del("bookings/" + editing.id); $("bookDlg").close(); toast("Deleted"); }
+  catch (err) { showErr(err); }
+};
+function showErr(err, target = "bErr") {
+  const msg = `Could not save (${err?.code || err?.name || "error"}: ${err?.message || err}). Reload and try again.`;
+  $(target).textContent = msg; $(target).hidden = false; toast(msg);
+}
+
+/* ---------- Team + lunch ---------- */
+let lunchName = null, here = true;
+// ponytail: hela team-dokumentet skrivs om vid varje ändring; två som sparar samma sekund kan skriva över varandra. Dela upp per dag om det händer.
+async function writeTeam(full) {
+  try { await put("team/members", full); }
+  catch (err) { showErr(err, "lErr"); throw err; }
+}
+function teamCopy() { return { names: [...team.names], shifts: structuredClone(team.shifts || {}), roster: structuredClone(team.roster || {}) }; }
+function openPerson(name) {
+  lunchName = name;
+  const s = shiftOf(day.id, name);
+  $("lTitle").textContent = name; $("lSub").textContent = `${day.short} ${day.label} · lunch is set per pass in the Schedule`;
+  const times = []; for (let m = 9 * 60; m <= day.close; m += 30) times.push(fmt(m));
+  $("lFrom").replaceChildren(...times.map(t => new Option(t, t)));
+  $("lTo").replaceChildren(...times.map(t => new Option(t, t)));
+  $("lFrom").value = s?.start || fmt(OPEN); $("lTo").value = s?.end || fmt(day.close);
+  setHere(!!s || !team.names.some(n => shiftOf(day.id, n)));
+  $("lRemove").classList.remove("armed"); $("lRemove").textContent = "Remove person";
+  $("lErr").hidden = true;
+  $("lunchDlg").showModal();
+}
+function setHere(v) {
+  here = v;
+  seg($("lHere"), [[true, "Yes"], [false, "No, not today"]], v, x => setHere(x), () => {});
+  $("lShiftRow").hidden = !v;
+  checkLunch();
+}
+function checkLunch() {
+  const bad = here && toMin($("lTo").value) <= toMin($("lFrom").value);
+  $("lWarn").textContent = bad ? "The shift ends before it starts." : ""; $("lWarn").hidden = !bad;
+}
+["lFrom", "lTo"].forEach(id => $(id).addEventListener("change", checkLunch));
+$("lCancel").onclick = () => $("lunchDlg").close();
+$("lunchForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const t = teamCopy();
+  t.shifts[day.id] ||= {};
+  if (here) {
+    if (toMin($("lTo").value) <= toMin($("lFrom").value)) return;
+    t.shifts[day.id][lunchName] = { start: $("lFrom").value, end: $("lTo").value };
+  } else delete t.shifts[day.id][lunchName];
+  try { await writeTeam(t); $("lunchDlg").close(); toast(`Saved for ${lunchName}`); } catch (err) {}
+});
+$("lRemove").onclick = async () => {
+  const btn = $("lRemove");
+  if (!btn.classList.contains("armed")) { btn.classList.add("armed"); btn.textContent = "Tap again to delete"; return; }
+  const t = teamCopy(); t.names = t.names.filter(n => n !== lunchName);
+  try { await writeTeam(t); $("lunchDlg").close(); } catch (err) {}
+};
+$("aCancel").onclick = () => $("addDlg").close();
+$("addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const n = $("aName").value.trim(); if (!n || team.names.includes(n)) { $("addDlg").close(); return; }
+  const t = teamCopy(); t.names.push(n);
+  try { await writeTeam(t); $("addDlg").close(); openPerson(n); } catch (err) {}
+});
+
+/* ---------- Data ---------- */
+function setSync(ok, text) { const s = $("sync"); s.textContent = text; s.classList.toggle("off", !ok); }
+render();
+setInterval(() => { if (!document.querySelector("dialog[open]")) render(); }, 60000);
+window.addEventListener("resize", () => document.documentElement.style.setProperty("--hh", $("hdr").offsetHeight + "px"));
+
+// Supabase: en tabell spiel26_docs(path, data), RLS öppen för anon på just den tabellen så alla med länken kan boka.
+const SB_URL = "https://xzmtgdapqbitsqmymict.supabase.co", SB_KEY = "sb_publishable_ej0lhA9MdzeryCeYGAMSww_axzpvG1w";
+const API = SB_URL + "/rest/v1/spiel26_docs";
+async function sb(url, opts = {}) {
+  const r = await fetch(url, { ...opts, headers: { apikey: SB_KEY, "Content-Type": "application/json", ...opts.headers } });
+  if (!r.ok) { const e = new Error(await r.text()); e.code = r.status; throw e; }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+async function put(path, data) {
+  await sb(API, { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ path, data }) });
+  pull();
+}
+async function del(path) { await sb(API + "?path=eq." + encodeURIComponent(path), { method: "DELETE" }); pull(); }
+let last = "";
+async function pull() {
+  try {
+    const rows = await sb(API + "?select=path,data");
+    setSync(true, "Live");
+    const key = JSON.stringify(rows); if (key === last) return; last = key;
+    bookings = rows.filter(r => r.path.startsWith("bookings/")).map(r => ({ id: r.path.slice(9), ...r.data }));
+    const d = rows.find(r => r.path === "team/members")?.data || {};
+    team = { names: Array.isArray(d.names) ? d.names : [], shifts: d.shifts || {}, roster: d.roster || {} };
+    if (!document.querySelector("dialog[open]")) render();
+  } catch (e) { setSync(false, "Offline – retrying"); }
+}
+// ponytail: pollar var 4:e sekund i stället för realtime-websocket; tål mobiler som somnar. Krockkollen är klientsidig, två som bokar samma lucka samma sekund kan båda gå igenom.
+pull(); setInterval(() => { if (!document.hidden) pull(); }, 4000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
+</script>
+
+</body></html>

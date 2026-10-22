@@ -642,23 +642,28 @@ render();
 setInterval(() => { if (!document.querySelector("dialog[open]")) render(); }, 60000);
 window.addEventListener("resize", () => document.documentElement.style.setProperty("--hh", $("hdr").offsetHeight + "px"));
 
-// Supabase: en tabell spiel26_docs(path, data), RLS öppen för anon på just den tabellen så alla med länken kan boka.
+// Supabase: tabellen spiel26_docs(path, data) nås bara via rpc-funktionerna spiel26_read/write/delete, som kräver teamkoden.
 const SB_URL = "https://xzmtgdapqbitsqmymict.supabase.co", SB_KEY = "sb_publishable_ej0lhA9MdzeryCeYGAMSww_axzpvG1w";
-const API = SB_URL + "/rest/v1/spiel26_docs";
 async function sb(url, opts = {}) {
   const r = await fetch(url, { ...opts, headers: { apikey: SB_KEY, "Content-Type": "application/json", ...opts.headers } });
   if (!r.ok) { const e = new Error(await r.text()); e.code = r.status; throw e; }
   const t = await r.text(); return t ? JSON.parse(t) : null;
 }
-async function put(path, data) {
-  await sb(API, { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ path, data }) });
-  pull();
+let CODE = ""; try { CODE = localStorage.getItem("team-code") || ""; } catch (e) {}
+function askCode(msg) { CODE = (prompt(msg || "Team code") || "").trim(); try { localStorage.setItem("team-code", CODE); } catch (e) {} }
+async function rpc(fn, args) {
+  try { return await sb(SB_URL + "/rest/v1/rpc/" + fn, { method: "POST", body: JSON.stringify({ code: CODE, ...args }) }); }
+  catch (e) { if (/bad team code/.test(e.message)) { CODE = ""; try { localStorage.removeItem("team-code"); } catch (x) {} } throw e; }
 }
-async function del(path) { await sb(API + "?path=eq." + encodeURIComponent(path), { method: "DELETE" }); pull(); }
+async function put(path, data) { await rpc("spiel26_write", { p: path, d: data }); pull(); }
+async function del(path) { await rpc("spiel26_delete", { p: path }); pull(); }
+$("sync").style.cursor = "pointer";
+$("sync").onclick = () => { if (!CODE) { askCode(); pull(); } };
 let last = "";
 async function pull() {
   try {
-    const rows = await sb(API + "?select=path,data");
+    if (!CODE) { setSync(false, "Tap to enter team code"); return; }
+    const rows = await rpc("spiel26_read", {});
     setSync(true, "Live");
     const key = JSON.stringify(rows); if (key === last) return; last = key;
     bookings = rows.filter(r => r.path.startsWith("bookings/")).map(r => ({ id: r.path.slice(9), ...r.data }));
@@ -668,6 +673,7 @@ async function pull() {
   } catch (e) { setSync(false, "Offline – retrying"); }
 }
 // ponytail: pollar var 4:e sekund i stället för realtime-websocket; tål mobiler som somnar. Krockkollen är klientsidig, två som bokar samma lucka samma sekund kan båda gå igenom.
+if (!CODE) askCode();
 pull(); setInterval(() => { if (!document.hidden) pull(); }, 4000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
 </script>

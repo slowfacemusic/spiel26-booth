@@ -250,7 +250,9 @@ const fmt = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 
 const overlap = (a0, a1, b0, b1) => a0 < b1 && b0 < a1;
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 const todayId = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-const slotsFor = day => { const out = []; for (let m = FIRST; m + DEMO <= day.close; m += STEP) out.push(m); return out; };
+// ponytail: sista passet får vara kortare än DEMO och slutar vid stängning, så länge det blir minst 30 min.
+const slotsFor = day => { const out = []; for (let m = FIRST; m + 30 <= day.close; m += STEP) out.push(m); return out; };
+const endOf = (day, m) => Math.min(m + DEMO, day.close);
 
 const OPEN = 10 * 60;
 let bookings = [], team = { names: [], shifts: {}, roster: {} };
@@ -274,7 +276,7 @@ function lunchOf(dayId, name) {
   const slot = Object.keys(r).find(k => (r[k].lunch || []).includes(name));
   return slot ? { start: slot, dur: STEP } : null;
 }
-function covers(dayId, name, m) { const s = shiftOf(dayId, name); return !!s && m >= toMin(s.start) && m + DEMO <= toMin(s.end); }
+function covers(dayId, name, m) { const s = shiftOf(dayId, name); return !!s && m >= toMin(s.start) && endOf(DAYS.find(d => d.id === dayId) || day, m) <= toMin(s.end); }
 // I montern vid minut m = har pass som täcker m och äter inte just då.
 function present(dayId, name, m) {
   const s = shiftOf(dayId, name); if (!s || m < toMin(s.start) || m >= toMin(s.end)) return false;
@@ -339,7 +341,7 @@ function renderSched() {
     const card = mk("div", "pass");
     if (isToday && nm >= m && nm < m + STEP) card.classList.add("now");
     else if (isToday && nm >= m + STEP) card.classList.add("past");
-    const head = mk("div", "ptime"); head.append(mk("b", "", slot), `–${fmt(m + DEMO)}`, mk("span", "", m + STEP <= day.close ? `break until ${fmt(m + STEP)}` : "last demo"));
+    const head = mk("div", "ptime"); head.append(mk("b", "", slot), `–${fmt(endOf(day, m))}`, mk("span", "", m + STEP <= day.close ? `break until ${fmt(m + STEP)}` : "last demo"));
     card.append(head);
 
     [1, 2].forEach(t => {
@@ -438,7 +440,7 @@ function renderGrid() {
   const h0 = document.createElement("div"); h0.className = "colhead";
   g.append(h0, ...[1, 2].map(t => { const h = document.createElement("div"); h.className = "colhead"; h.textContent = "Table " + t; return h; }));
   const times = document.createElement("div"); times.className = "times";
-  slots.forEach(m => { const d = document.createElement("div"); d.innerHTML = `<b>${fmt(m)}</b>–${fmt(m + DEMO)}`; times.append(d); });
+  slots.forEach(m => { const d = document.createElement("div"); d.innerHTML = `<b>${fmt(m)}</b>–${fmt(endOf(day, m))}`; times.append(d); });
   g.append(times);
   const cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cell")) || 96;
   [1, 2].forEach(t => {
@@ -496,6 +498,7 @@ function seg(el, options, value, onPick, after = checkBooking) {
 function openBooking(b, preset) {
   editing = b;
   form = b ? { ...b } : { game: "Beast", dur: DEMO, status: "booked", players: 2, host: "", name: "", note: "", ...preset };
+  if (!b && form.start) form.dur = endOf(day, toMin(form.start)) - toMin(form.start);
   $("bTitle").textContent = b ? b.name : "New demo";
   $("bSub").textContent = `${day.short} ${day.label}`;
   seg($("bGame"), Object.keys(GAMES).map(g => [g, g]), form.game, v => form.game = v);
